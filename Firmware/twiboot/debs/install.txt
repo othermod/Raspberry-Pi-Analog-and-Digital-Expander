@@ -1,0 +1,5 @@
+sudo dpkg -i binutils-avr.deb
+sudo dpkg -i gcc-avr.deb
+sudo dpkg -i avr-libc.deb
+sudo dpkg -i libncurses.deb
+sudo dpkg -i avrdude.deb
