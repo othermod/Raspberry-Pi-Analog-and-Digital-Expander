@@ -13,31 +13,24 @@
 #define ENABLE_PULLUPS_ON_PORTD  PORTD = B11111111
 #define READ_PORTD_PINS          PIND
 
-byte temporaryButtonDataA; //The button data is constantly changing and shifting. Store in temp variable and only copy to i2c data byte after all pins are read. This keeps incomplete data from being read by i2c.
-byte temporaryButtonDataB; //To store parallel data
+#define DEBOUNCE_CYCLES 5 // keep the button pressed for this many loops. can be 0-255. each loop is 10ms
 
-byte buttonDebounceA[8]; // button stays pressed until the bit is shifted out(5 10ms cycles) to debounce and to make sure the button press isn't missed
-byte buttonDebounceB[8];
+int tempVoltage = analogRead(2) * 16;
+int tempAmperage = analogRead(3) * 16;
 
-#define DEBOUNCE_CYCLES B00010000
-
-struct I2C_Structure
-{
-  uint8_t buttonA; // button status
-  uint8_t buttonB; // button status
+struct I2C_Structure {
+  uint8_t buttonsPortB; // button status
+  uint8_t buttonsPortD; // button status
   uint8_t joystickLX; // button status
   uint8_t joystickLY; // button status
   uint8_t joystickRX; // button status
   uint8_t joystickRY; // button status
   uint8_t voltage; // can do all the math here and just give a voltage or %, making these a single byte or 2 bytes at most
   uint8_t amperage;
-  byte misc;
+  uint8_t misc;
 };
 
 I2C_Structure I2C_data;
-
-uint16_t tempVoltage;
-uint16_t tempAmperage;
 
 void requestEvent(){
   Wire.write((char*) &I2C_data, sizeof(I2C_data)); // send the data to the Pi
@@ -45,22 +38,38 @@ void requestEvent(){
 
 void readButtons(){
   //Pin registers are accessed directly. This reads all 8 GPIOs on each register with one command.
-  I2C_data.buttonA = READ_PORTB_PINS;
-  I2C_data.buttonB = READ_PORTD_PINS;
- // byte i;
-  // for(i=0;i<8;i++) {
-  //    if (true){ //if button is not pressed (GPIO high)
-    //    buttonDebounceA[i] = buttonDebounceA[i] >> 1;
- //     } 
- //     else {
-//        buttonDebounceA[i] = DEBOUNCE_CYCLES; 
-//      }
-      //pinState = buttonDebounceA[i];  //
-      //temporaryButtonDataA = (temporaryButtonDataA<<1)|pinState; //Shift the bit into temporaryButtonDataA
-  // }
-    //I2C_data.buttonA = temporaryButtonDataA;
-    //I2C_data.buttonB = temporaryButtonDataB;
-   
+  byte readingB = ~READ_PORTB_PINS; // read the pins and invert them, so that a 1 means pushed
+  byte readingD = ~READ_PORTD_PINS;
+  
+  uint8_t debouncePortB[8]; // button stays pressed for a few cycles to debounce and to make sure the button press isn't missed
+  uint8_t debouncePortD[8];
+
+  byte i;
+  for(i=0;i<8;i++) {
+    
+    // for port B buttons
+    if ((readingB >> i) & 1) {            // if button is pressed
+      debouncePortB[i] = DEBOUNCE_CYCLES; // begin the debounce function for this button
+    } 
+    else {                                // if button is not pressed
+      if (debouncePortB[i]) {             // if debounce function is active ( > 0)
+        debouncePortB[i]--;               // decrement the debounce function
+        readingB = readingB|(1<<i);       // keep this pin pressed
+      }
+    }
+    // for port D buttons
+    if ((readingD >> i) & 1){             // if button is pressed
+      debouncePortD[i] = DEBOUNCE_CYCLES; // begin the debounce function for this button
+    } 
+    else {                                // if button is not pressed
+      if (debouncePortD[i]) {             // if debounce function is active ( > 0)
+        debouncePortD[i]--;               // decrement the debounce function
+        readingD = readingD|(1<<i);       // keep this pin pressed
+      }
+    }
+   }
+    I2C_data.buttonsPortB = readingB; // copy the completed readings into the i2c variable to be read by the Raspberry Pi
+    I2C_data.buttonsPortD = readingD;
 }
 
 void readADC(){
@@ -70,14 +79,14 @@ void readADC(){
   I2C_data.joystickRY=analogRead(2)/4;
   tempVoltage = tempVoltage - (tempVoltage / 16) + analogRead(7); //rolling average of 16 readings
   I2C_data.voltage = tempVoltage / 16;
-  
+
   tempAmperage = tempAmperage - (tempAmperage / 16) + analogRead(6); //rolling average of 16 readings
   I2C_data.amperage = tempAmperage / 16;
   //I2C_data.voltage = analogRead(2);
   //I2C_data.amperage = analogRead(3);
 }
 
-void setup() {
+void setup(){
   SET_PORTB_PINS_AS_INPUTS;
   ENABLE_PULLUPS_ON_PORTB;
   SET_PORTD_PINS_AS_INPUTS;
@@ -85,21 +94,11 @@ void setup() {
   Wire.begin(I2C_ADDRESS);  // join i2c bus
   Wire.onRequest(requestEvent); // register event
   //analogReference(INTERNAL); // use internal 1.1v reference for ADC
-  tempVoltage = analogRead(2) * 16;
-  tempAmperage = analogRead(3) * 16;
-  
+  I2C_data.misc = B10010010;
 }
-void loop() {
-  uint16_t timeDelay=millis()+10; //why does a single byte only work for a moment and then freeze?
+
+void loop(){
   readButtons();
   readADC();
-  uint16_t timeNow=millis();
-  delay(timeDelay-timeNow);
-I2C_data.misc = B10010010;
+  delay(10);
 }
-
-
-
-
-
-   
