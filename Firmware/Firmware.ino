@@ -15,8 +15,8 @@
 
 #define DEBOUNCE_CYCLES 5 // keep the button pressed for this many loops. can be 0-255. each loop is 10ms
 
-int tempVoltage = analogRead(2) * 16;
-int tempAmperage = analogRead(3) * 16;
+int averageVoltage = analogRead(2) * 16;
+int averageAmperage = analogRead(3) * 16;
 
 struct I2C_Structure {
   uint8_t buttonsPortB; // button status
@@ -27,7 +27,6 @@ struct I2C_Structure {
   uint8_t joystickRY; // button status
   uint8_t voltage; // can do all the math here and just give a voltage or %, making these a single byte or 2 bytes at most
   uint8_t amperage;
-  uint8_t misc;
 };
 
 I2C_Structure I2C_data;
@@ -77,13 +76,12 @@ void readADC(){
   I2C_data.joystickLY=analogRead(1)/4;
   I2C_data.joystickRX=analogRead(3)/4;
   I2C_data.joystickRY=analogRead(2)/4;
-  tempVoltage = tempVoltage - (tempVoltage / 16) + analogRead(7); //rolling average of 16 readings
-  I2C_data.voltage = tempVoltage / 16;
-
-  tempAmperage = tempAmperage - (tempAmperage / 16) + analogRead(6); //rolling average of 16 readings
-  I2C_data.amperage = tempAmperage / 16;
-  //I2C_data.voltage = analogRead(2);
-  //I2C_data.amperage = analogRead(3);
+  averageVoltage = averageVoltage - (averageVoltage / 16) + analogRead(7); //rolling average of 16 readings
+  I2C_data.voltage = averageVoltage / 16;
+  averageAmperage = averageAmperage - (averageAmperage / 16) + analogRead(6); //rolling average of 16 readings
+  I2C_data.amperage = averageAmperage / 16;
+  I2C_data.voltage = analogRead(2);
+  I2C_data.amperage = analogRead(3);
 }
 
 void setup(){
