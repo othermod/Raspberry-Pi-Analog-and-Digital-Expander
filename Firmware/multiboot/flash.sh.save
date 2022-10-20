@@ -1,3 +1,0 @@
-raspi-gpio set 40 op dl
-./twiboot -a 0x29 -d /dev/i2c-1 -w flash:/home/pi/multiboot/Firmware.ino.arduino_standard.hex
-
