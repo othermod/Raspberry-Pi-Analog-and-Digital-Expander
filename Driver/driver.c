@@ -88,7 +88,6 @@ int createUInputDevice() {
   ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY15);
   ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY16);
 
-  // axis
   if (numberOfJoysticks) {
     ioctl(fd, UI_SET_EVBIT, EV_ABS);
     // left joystick
@@ -187,18 +186,25 @@ int main(int argc, char * argv[]) {
     if (read(I2CFile, &I2C_DATA, sizeof(I2C_STRUCTURE)) != sizeof(I2C_STRUCTURE)) { // read the atmega
       printf("Controller is not detected on the I2C bus.\n");
       sleep(1);
-    } else {
-      if ((previousPortB!=I2C_DATA.buttonsPortB) | (previousPortD!=I2C_DATA.buttonsPortD)) {
+    }
+    else {
+      bool updateUinput = 0;
+      if ((previousPortB!=I2C_DATA.buttonsPortB) | (previousPortD!=I2C_DATA.buttonsPortD)) { // only update the buttons if something changed
         updateButtons(virtualGamepad);
+        updateUinput = 1;
       }
-      updateJoystick(virtualGamepad); // this needs its own section, or needs to constantly happen
-      emit(virtualGamepad, EV_SYN, SYN_REPORT, 0); //make this happen whenever something changes
+      if(numberOfJoysticks) { // only update the joysticks if they are enabled
+        updateJoystick(virtualGamepad);
+        updateUinput = 1;
+      }
+      if (updateUinput) { // only update the gamepad when something changes
+        emit(virtualGamepad, EV_SYN, SYN_REPORT, 0);
+      }
       previousPortB = I2C_DATA.buttonsPortB;
       previousPortD = I2C_DATA.buttonsPortD;
     }
 
     usleep(16666);
   }
-close(I2CFile); // close file
-
+close(I2CFile); // close i2c
 }
