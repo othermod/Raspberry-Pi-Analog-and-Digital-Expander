@@ -92,7 +92,6 @@ void setup(){
   Wire.begin(I2C_ADDRESS);  // join i2c bus
   Wire.onRequest(requestEvent); // register event
   //analogReference(INTERNAL); // use internal 1.1v reference for ADC
-  I2C_data.misc = B10010010;
 }
 
 void loop(){
