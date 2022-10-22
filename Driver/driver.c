@@ -58,7 +58,8 @@ typedef struct {
 I2C_STRUCTURE;
 I2C_STRUCTURE I2C_DATA; // create I2C data struct
 
-int numberOfJoysticks = 0;
+bool leftJoystickEnabled = 0;
+bool rightJoystickEnabled = 0;
 bool batteryEnabled = 0;
 
 int openI2C() {
@@ -72,7 +73,6 @@ int openI2C() {
 }
 
 int createUInputDevice() {
-  numberOfJoysticks = 2;
   int fd;
   fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
   if (fd < 0) {
@@ -103,7 +103,7 @@ int createUInputDevice() {
   ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY15);
   ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY16);
 
-  if (numberOfJoysticks) {
+  if (leftJoystickEnabled) {
     ioctl(fd, UI_SET_EVBIT, EV_ABS);
     // left joystick
     ioctl(fd, UI_SET_ABSBIT, ABS_X);
@@ -118,7 +118,7 @@ int createUInputDevice() {
     //uidev.absfuzz[ABS_Y] = 0; // what does this do?
   }
 
-  if (numberOfJoysticks == 2) {
+  if (rightJoystickEnabled) {
     // right joystick
     ioctl(fd, UI_SET_ABSBIT, ABS_RX);
     uidev.absmin[ABS_RX] = 0; // center position is 127
@@ -180,7 +180,7 @@ void updateJoystick(int virtualGamepad) {
   // update joystick
   emit(virtualGamepad, EV_ABS, ABS_X, I2C_DATA.joystickLX);
   emit(virtualGamepad, EV_ABS, ABS_Y, I2C_DATA.joystickLX);
-  if (numberOfJoysticks == 2) {
+  if (rightJoystickEnabled) {
     emit(virtualGamepad, EV_ABS, ABS_RX, I2C_DATA.joystickRX);
     emit(virtualGamepad, EV_ABS, ABS_RY, I2C_DATA.joystickRY);
   }
@@ -259,14 +259,16 @@ int main(int argc, char * argv[]) {
          batteryEnabled = 1;
         }
         if (!strcmp("-joystick", argv[ctr])) {
-         numberOfJoysticks = 1;
+         leftJoystickEnabled = 1;
        }
         if (!strcmp("-joysticks", argv[ctr])) {
-          numberOfJoysticks = 2;
+          leftJoystickEnabled = 1;
+          rightJoystickEnabled = 1;
         }
      }
   if (batteryEnabled) {printf("Battery Overlay Enabled\n");}
-  if (numberOfJoysticks) {printf("Joysticks Enabled: %d\n", numberOfJoysticks);}
+  if (leftJoystickEnabled) {printf("Left Joystick Enabled\n");}
+  if (rightJoystickEnabled) {printf("Right Joystick Enabled\n");}
   int I2CFile = openI2C(); // open I2C device
   if (ioctl(I2CFile, I2C_SLAVE, I2C_ADDRESS) < 0) { // initialize communication
     fprintf(stderr, "I2C: Failed to acquire bus access/talk to slave 0x%x\n", I2C_ADDRESS);
@@ -277,8 +279,7 @@ if (batteryEnabled) {
   // set up the overlay
   uint32_t displayNumber = 0;
   bcm_host_init();
-  DISPMANX_DISPLAY_HANDLE_T display
-    = vc_dispmanx_display_open(displayNumber);
+  DISPMANX_DISPLAY_HANDLE_T display = vc_dispmanx_display_open(displayNumber);
   assert(display != 0);
   DISPMANX_MODEINFO_T info;
   int result = vc_dispmanx_display_get_info(display, & info);
@@ -300,14 +301,12 @@ if (batteryEnabled) {
   drawBattery(& batteryLayer); // this is only done if something changes on the OSD
 }
 
-
   int virtualGamepad = createUInputDevice(); // create uinput device
   updateButtons(virtualGamepad);
 
   uint8_t previousPortB = 0;
   uint8_t previousPortD = 0;
   while (1) {
-
     if (read(I2CFile, &I2C_DATA, sizeof(I2C_STRUCTURE)) != sizeof(I2C_STRUCTURE)) { // read the atmega
       printf("Controller is not detected on the I2C bus.\n");
       sleep(1);
@@ -319,7 +318,7 @@ if (batteryEnabled) {
         updateButtons(virtualGamepad);
         updateUinput = 1;
       }
-      if(numberOfJoysticks) { // only update the joysticks if they are enabled
+      if(leftJoystickEnabled) { // only update the joysticks if one is enabled
         updateJoystick(virtualGamepad);
         updateUinput = 1;
       }
