@@ -61,7 +61,6 @@ I2C_STRUCTURE I2C_DATA; // create I2C data struct
 int numberOfJoysticks = 0;
 bool batteryEnabled = 0;
 
-
 int openI2C() {
   int file;
   char * filename = "/dev/i2c-0"; //specify which I2C bus to use
@@ -122,19 +121,19 @@ int createUInputDevice() {
   if (numberOfJoysticks == 2) {
     // right joystick
     ioctl(fd, UI_SET_ABSBIT, ABS_RX);
-    uidev.absmin[ABS_RX] = 0; // center position is 1650
-    uidev.absmax[ABS_RX] = 255; // center position is 1650
+    uidev.absmin[ABS_RX] = 0; // center position is 127
+    uidev.absmax[ABS_RX] = 255;
     uidev.absflat[ABS_RX] = 10; // deadzone
     //uidev.absfuzz[ABS_RX] = 0; // what does this do?
     ioctl(fd, UI_SET_ABSBIT, ABS_RY);
-    uidev.absmin[ABS_RY] = 0; // center position is 1650
-    uidev.absmax[ABS_RY] = 255; // center position is 1650
+    uidev.absmin[ABS_RY] = 0; // center position is 127
+    uidev.absmax[ABS_RY] = 255;
     uidev.absflat[ABS_RY] = 10; // deadzone
     //uidev.absfuzz[ABS_Y] = 0; // what does this do?
   }
 
   snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "othermod Gamepad");
-  uidev.id.bustype = BUS_USB;
+  uidev.id.bustype = BUS_USB; // is the id stuff needed?
   uidev.id.vendor = 1;
   uidev.id.product = 5;
   uidev.id.version = 1;
@@ -266,7 +265,7 @@ int main(int argc, char * argv[]) {
           numberOfJoysticks = 2;
         }
      }
-  if (batteryEnabled) {printf("Overlay Enabled\n");}
+  if (batteryEnabled) {printf("Battery Overlay Enabled\n");}
   if (numberOfJoysticks) {printf("Joysticks Enabled: %d\n", numberOfJoysticks);}
   int I2CFile = openI2C(); // open I2C device
   if (ioctl(I2CFile, I2C_SLAVE, I2C_ADDRESS) < 0) { // initialize communication
@@ -277,36 +276,27 @@ int main(int argc, char * argv[]) {
 if (batteryEnabled) {
   // set up the overlay
   uint32_t displayNumber = 0;
-
   bcm_host_init();
-
   DISPMANX_DISPLAY_HANDLE_T display
     = vc_dispmanx_display_open(displayNumber);
   assert(display != 0);
-
   DISPMANX_MODEINFO_T info;
   int result = vc_dispmanx_display_get_info(display, & info);
   assert(result == 0);
-
   static int layer = 100000;
-
   IMAGE_LAYER_T batteryLayer;
   initImageLayer( & batteryLayer,
     31, // battery image width
     15, // battery image height
     VC_IMAGE_RGBA16);
   createResourceImageLayer( & batteryLayer, layer);
-
-
   DISPMANX_UPDATE_HANDLE_T update = vc_dispmanx_update_start(0);
   assert(update != 0);
   int xOffset = info.width - 31;
   int yOffset = 0;
   addElementImageLayerOffset( & batteryLayer, xOffset, yOffset, display, update);
-
   result = vc_dispmanx_update_submit_sync(update);
   assert(result == 0);
-
   drawBattery(& batteryLayer); // this is only done if something changes on the OSD
 }
 
