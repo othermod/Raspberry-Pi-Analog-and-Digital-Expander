@@ -13,7 +13,6 @@
 #include <math.h>
 #include "bcm_host.h"
 #include <assert.h>
-int numberOfJoysticks = 2;
 
 #define SENSE_RESISTOR 100
 
@@ -58,6 +57,10 @@ typedef struct {
 }
 I2C_STRUCTURE;
 I2C_STRUCTURE I2C_DATA; // create I2C data struct
+
+int numberOfJoysticks = 0;
+bool batteryEnabled = 0;
+
 
 int openI2C() {
   int file;
@@ -251,12 +254,27 @@ void clearLayer(IMAGE_LAYER_T * layer) {
 }
 
 int main(int argc, char * argv[]) {
+  int ctr;
+     for( ctr=0; ctr < argc; ctr++ ) {
+        if (!strcmp("-battery", argv[ctr])) {
+         batteryEnabled = 1;
+        }
+        if (!strcmp("-joystick", argv[ctr])) {
+         numberOfJoysticks = 1;
+       }
+        if (!strcmp("-joysticks", argv[ctr])) {
+          numberOfJoysticks = 2;
+        }
+     }
+  if (batteryEnabled) {printf("Overlay Enabled\n");}
+  if (numberOfJoysticks) {printf("Joysticks Enabled: %d\n", numberOfJoysticks);}
   int I2CFile = openI2C(); // open I2C device
   if (ioctl(I2CFile, I2C_SLAVE, I2C_ADDRESS) < 0) { // initialize communication
     fprintf(stderr, "I2C: Failed to acquire bus access/talk to slave 0x%x\n", I2C_ADDRESS);
     return 0;
   }
 
+if (batteryEnabled) {
   // set up the overlay
   uint32_t displayNumber = 0;
 
@@ -290,6 +308,8 @@ int main(int argc, char * argv[]) {
   assert(result == 0);
 
   drawBattery(& batteryLayer); // this is only done if something changes on the OSD
+}
+
 
   int virtualGamepad = createUInputDevice(); // create uinput device
   updateButtons(virtualGamepad);
