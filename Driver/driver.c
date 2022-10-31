@@ -52,7 +52,7 @@ typedef struct {
   uint8_t joystickLY; // button status
   uint8_t joystickRX; // button status
   uint8_t joystickRY; // button status
-  uint8_t voltage; // can do all the math here and just give a voltage or %, making these a single byte or 2 bytes at most
+  uint8_t voltage; // do all the math on the atmega, and send a single byte (single bit for charging/discharging, 7 bits for % 1-100 )
   uint8_t amperage;
 }
 I2C_STRUCTURE;
