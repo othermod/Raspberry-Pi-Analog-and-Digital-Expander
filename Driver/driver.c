@@ -61,6 +61,7 @@ I2C_STRUCTURE I2C_DATA; // create I2C data struct
 bool leftJoystickEnabled = 0;
 bool rightJoystickEnabled = 0;
 bool batteryEnabled = 0;
+uint16_t batteryCapacitymAh = 2000;
 
 int openI2C() {
   int file;
@@ -264,6 +265,14 @@ int main(int argc, char * argv[]) {
         if (!strcmp("-joysticks", argv[ctr])) {
           leftJoystickEnabled = 1;
           rightJoystickEnabled = 1;
+        }
+        if (!strcmp("-capacity", argv[ctr])) {
+          if ((batteryCapacitymAh = atoi(argv[ctr + 1]))){ // segmentation fault if no variable is entered and its the last argument. learn the right way to do this.
+          printf("Battery Capacity is %dmAh\n", batteryCapacitymAh);
+        } else {
+          printf("Enter the number of mAH so battery capacity can be measured (ex: -battery 2000)\n");
+          exit(1);
+        }
         }
      }
   if (batteryEnabled) {printf("Battery Overlay Enabled\n");}

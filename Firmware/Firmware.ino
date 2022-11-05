@@ -83,17 +83,19 @@ void readBattery(){
 }
 
 void setup(){
+  Wire.begin(I2C_ADDRESS);  // join i2c bus
+  Wire.onRequest(requestEvent); // register event
   SET_PORTB_PINS_AS_INPUTS;
   ENABLE_PULLUPS_ON_PORTB;
   SET_PORTD_PINS_AS_INPUTS;
   ENABLE_PULLUPS_ON_PORTD;
-  Wire.begin(I2C_ADDRESS);  // join i2c bus
-  Wire.onRequest(requestEvent); // register event
 }
 
-void loop(){
-  readButtons();
-  readJoysticks();
-  readBattery();
-  delay(10);
+ void loop(){
+  while (1){
+    readButtons();
+    readJoysticks();
+    readBattery();
+    delay(10);
+  }
 }
