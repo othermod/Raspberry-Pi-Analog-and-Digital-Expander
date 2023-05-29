@@ -1,31 +1,40 @@
 #include <Wire.h>
 
 #define I2C_ADDRESS 0x10
+
 // Digital Input Port B
 #define SET_PORTB_PINS_AS_INPUTS DDRB &= B00000000
 #define ENABLE_PULLUPS_ON_PORTB  PORTB = B11111111
 #define READ_PORTB_PINS          PINB
+
 // Digital Input Port D
 #define SET_PORTD_PINS_AS_INPUTS DDRD &= B00000000
 #define ENABLE_PULLUPS_ON_PORTD  PORTD = B11111111
 #define READ_PORTD_PINS          PIND
+
 #define DEBOUNCE_CYCLES 5 // keep the button pressed for this many loops. can be 0-255. each loop is 10ms
+#define ANALOG_PIN1 0
+#define ANALOG_PIN2 1
+#define ANALOG_PIN3 2
+#define ANALOG_PIN4 3
+#define ANALOG_PIN5 6
+#define ANALOG_PIN6 7
 
-int averageAmperage = analogRead(6) * 16;
-int averageVoltage = analogRead(7) * 16;
+unsigned long previousMillis = 0;
+const long interval = 10; // interval at which to blink (milliseconds)
 
-// to do:
-// when the atmega begins, it should detect voltage based off voltage and amperage. wheh pi initializes, it switches to coloumb counting. create variable for capacity and allow pi to transmit it to the atmega
+uint8_t debouncePortB[8] = {0}; // button stays pressed for a few cycles to debounce and to make sure the button press isn't missed
+uint8_t debouncePortD[8] = {0};
 
 struct I2C_Structure { // define the structure layout for transmitting I2C data to the Raspberry Pi
   uint8_t buttonsPortB; // button status
   uint8_t buttonsPortD; // button status
-  uint8_t joystickLX; // button status
-  uint8_t joystickLY; // button status
-  uint8_t joystickRX; // button status
-  uint8_t joystickRY; // button status
-  uint8_t voltage; // can do all the math here and just give a voltage or %, making these a single byte.
-  uint8_t amperage;
+  uint8_t analog1;
+  uint8_t analog2;
+  uint8_t analog3;
+  uint8_t analog4;
+  uint8_t analog5;
+  uint8_t analog6;
 };
 
 I2C_Structure I2C_data; // create the structure for the I2C data
@@ -38,8 +47,6 @@ void readButtons(){
   //Pin registers are accessed directly. This reads all 8 GPIOs on each register with one command.
   byte readingB = ~READ_PORTB_PINS; // read the pins and invert them, so that a 1 means pushed
   byte readingD = ~READ_PORTD_PINS;
-  uint8_t debouncePortB[8]; // button stays pressed for a few cycles to debounce and to make sure the button press isn't missed
-  uint8_t debouncePortD[8];
 
   byte i;
   for(i=0;i<8;i++) {
@@ -63,23 +70,18 @@ void readButtons(){
         readingD = readingD|(1<<i);       // keep this pin pressed
       }
     }
-   }
-    I2C_data.buttonsPortB = readingB; // copy the completed readings into the i2c variable to be read by the Raspberry Pi
-    I2C_data.buttonsPortD = readingD;
+  }
+  I2C_data.buttonsPortB = readingB; // copy the completed readings into the i2c variable to be read by the Raspberry Pi
+  I2C_data.buttonsPortD = readingD;
 }
 
-void readJoysticks(){
-  I2C_data.joystickLX=analogRead(0)/4; // read the ADCs, and reduce to 8 bits
-  I2C_data.joystickLY=analogRead(1)/4;
-  I2C_data.joystickRY=analogRead(2)/4;
-  I2C_data.joystickRX=analogRead(3)/4;
-}
-
-void readBattery(){
-  averageAmperage = averageAmperage - (averageAmperage / 16) + analogRead(6); //rolling average of 16 readings
-  I2C_data.amperage = averageAmperage / 16;
-  averageVoltage = averageVoltage - (averageVoltage / 16) + analogRead(7); //rolling average of 16 readings
-  I2C_data.voltage = averageVoltage / 16;
+void readAnalog(){
+  I2C_data.analog1=(analogRead(ANALOG_PIN1) >> 2); // read the ADCs, and reduce from 10 to 8 bits
+  I2C_data.analog2=(analogRead(ANALOG_PIN2) >> 2);
+  I2C_data.analog3=(analogRead(ANALOG_PIN3) >> 2);
+  I2C_data.analog4=(analogRead(ANALOG_PIN4) >> 2);
+  I2C_data.analog5=(analogRead(ANALOG_PIN5) >> 2);
+  I2C_data.analog6=(analogRead(ANALOG_PIN6) >> 2);
 }
 
 void setup(){
@@ -91,11 +93,14 @@ void setup(){
   ENABLE_PULLUPS_ON_PORTD;
 }
 
- void loop(){
-  while (1){
+void loop() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    // save the last time the loop was executed
+    previousMillis = currentMillis;
+
+    // Your functions here
     readButtons();
-    readJoysticks();
-    readBattery();
-    delay(10);
+    readAnalog();
   }
 }
