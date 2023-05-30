@@ -91,24 +91,27 @@ function get_and_set_i2c_bus() {
     echo "The default is 1, but it depends on your setup"
 
     while true; do
-        # Ask the user to input a value from the available buses
-        read -p "Enter a number from the available buses: " input_value
+    # Ask the user to input a value from the available buses
+    read -p "Enter a number from the available buses: " input_value
 
-        # Check if the input_value is in the list of available buses
-        if [[ " ${available_buses[@]} " =~ " ${input_value} " ]]; then
-            # Check for the existence of the line in gamepad.c
-            if grep -q "#define I2C_BUS \"/dev/i2c-" "gamepad.c"; then
-                # Use sed command to replace the line in gamepad.c
-                sed -i "s|#define I2C_BUS \"/dev/i2c-.*\"|#define I2C_BUS \"/dev/i2c-$input_value\"|g" "gamepad.c"
-                echo "The file gamepad.c has been updated successfully"
-                break
-            else
-                echo "The line '#define I2C_BUS \"/dev/i2c-' does not exist in gamepad.c. Make sure you copied the correct file."
-                exit 1
-            fi
-        else
-            echo "Invalid input. The input should be a number from the available buses. Please try again."
-        fi
+    # Check if the input_value is in the list of available buses
+    if [[ " ${available_buses[@]} " =~ " ${input_value} " ]]; then
+        break
+    else
+        echo "Invalid input. The input should be a number from the available buses. Please try again."
+    fi
+    done
+
+    for file in gamepad.c datareader.c; do
+    # Check for the existence of the line in the file
+    if grep -q "#define I2C_BUS \"/dev/i2c-" "$file"; then
+        # Use sed command to replace the line in the file
+        sed -i "s|#define I2C_BUS \"/dev/i2c-.*\"|#define I2C_BUS \"/dev/i2c-$input_value\"|g" "$file"
+        echo "The file $file has been updated successfully"
+    else
+        echo "The line '#define I2C_BUS \"/dev/i2c-' does not exist in $file. Make sure you copied the correct file."
+        exit 1
+    fi
     done
 }
 
@@ -121,19 +124,22 @@ function install_service() {
     systemctl enable gamepad
 }
 
-function compile_gamepad_driver() {
-    echo "Compiling the gamepad driver"
-    rm gamepad 2>/dev/null
+function compile_drivers() {
+    for file in gamepad datareader; do
+        echo "Compiling the $file driver"
+        rm $file 2>/dev/null
 
-    # Compile gamepad.c
-    gcc -O3 -o gamepad gamepad.c
-    if [ $? -eq 0 ]; then
-        echo "Gamepad was compiled successfuly"
-    else
-        echo "Failed to compile the gamepad driver. Make sure you copied the correct gamepad.c file."
-        exit 1
-    fi
+        # Compile the C file
+        gcc -O3 -o $file $file.c
+        if [ $? -eq 0 ]; then
+            echo "The $file was compiled successfully"
+        else
+            echo "Failed to compile the $file driver. Make sure you copied the correct $file.c file."
+            exit 1
+        fi
+    done
 }
+
 
 function handle_existing_gamepad_service() {
     echo "Disabling and removing existing gamepad service"
@@ -165,7 +171,7 @@ check_files_exist
 enable_i2c
 compile_and_run_i2c_scanner
 get_and_set_i2c_bus
-compile_gamepad_driver
+compile_drivers
 handle_existing_gamepad_service
 prompt_for_autostart
 

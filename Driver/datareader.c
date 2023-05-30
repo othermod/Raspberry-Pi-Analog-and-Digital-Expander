@@ -7,6 +7,7 @@
 #include <getopt.h>
 
 #define DEVICE_ADDR 0x10
+#define I2C_BUS "/dev/i2c-0"
 
 void display_data_in_binary(unsigned char* data, int start, int length) {
     for(int i = start; i < start + length; i++) {
@@ -19,7 +20,7 @@ void display_data_in_binary(unsigned char* data, int start, int length) {
 
 int main(int argc, char *argv[]) {
     int file;
-    char *filename = "/dev/i2c-1"; // change bus number according to your setup
+    char *filename = I2C_BUS; // change bus number according to your setup
     if ((file = open(filename, O_RDWR)) < 0) {
         printf("Failed to open the i2c bus\n");
         exit(1);
