@@ -169,6 +169,5 @@ compile_gamepad_driver
 handle_existing_gamepad_service
 prompt_for_autostart
 
-
-would you like to create a gamepad from this?
-how many joysticks?
+echo "how many joysticks?"
+echo "a reboot may be required"
