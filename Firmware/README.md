@@ -47,7 +47,7 @@ programmer
 sudo avrdude -p m8 -c linuxgpio
 ```
 4. Navigate to the directory containing the firmware file.
-5. Run the following command to flash the firmware: `avrdude -c gpio -p m8 -U flash:w:firmware.hex`
+5. Run the following command to flash the firmware: `avrdude -c gpio -p m8 -U flash:w:Firmware.hex`
 6. Check for the chip to show up at I2C address 0x10
 
 ## Troubleshooting
