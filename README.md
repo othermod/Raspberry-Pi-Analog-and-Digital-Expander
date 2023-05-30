@@ -9,17 +9,14 @@
 - [Troubleshooting](#troubleshooting)
 
 ## Overview
-This repository contains two programs for interacting with a custom gamepad device connected to a Raspberry Pi via the I2C bus:
-- `gamepad.c`: Emulates a virtual gamepad with up to 3 joysticks and 16 buttons, reading data from the connected device.
-- `datareader.c`: Reads and displays data from the connected device in binary format.
+This repository contains the PCB files for an atmega-based Analog and Digital I2C expander for the Raspberry Pi. The PCB connects to the Raspberry Pi using the CSI camera connector.
 
-## Features
+I included two programs for interacting with the Expander:
 - Create a gamepad with up to 3 joysticks and 16 buttons using `gamepad.c`.
 - Read and display device data in binary format using `datareader.c`.
-- Both programs interact with the connected device via the I2C bus.
 
 ## Prerequisites
-- A Raspberry Pi with an available CSI connector (camera connector).
+- A Raspberry Pi with an available CSI connector.
 - The othermod Analog and Digital Expander
 - The proper CSI cable for your version of Raspberry Pi.
 - GCC compiler (for `gamepad.c` or `datareader.c`).
@@ -32,7 +29,7 @@ The module connects to the Raspberry Pi using the CSI connector.
 ## Software Setup
 
 ### Automatic Installation
-If you intend to use this as a gamepad, you can run the setup script.
+If you intend to use this as a gamepad, you can run the setup script. [coming soon]
 
 ### Manual Installation
 
@@ -54,15 +51,17 @@ dtparam=i2c_vc=on
 
 After a reboot, I2C should now be enabled.
 
-Run one of the following commands to build the programs:
-
+If you aren't sure which I2C bus the camera connector is using, run the following commands to build and run the scanning program:
+```
+gcc scan.c -o scan
+./scan
+```
+Now build the programs.
 ```
 gcc -O3 gamepad.c -o gamepad
 gcc datareader.c -o datareader
 ```
-
 You can run `gamepad` using the following command:
-
 ```
 sudo ./gamepad [number_of_joysticks]
 ```
