@@ -2,7 +2,6 @@
 
 ## Table of Contents
 - [Overview](#overview)
-- [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Hardware Installation](#hardware-installation)
 - [Software Setup](#software-setup)
@@ -12,8 +11,8 @@
 This repository contains the PCB files and software for an atmega-based Analog and Digital I2C expander for the Raspberry Pi. The PCB connects to the Raspberry Pi using the CSI camera connector.
 
 I included two programs for interacting with the Expander:
-- Create a gamepad with up to 3 joysticks and 16 buttons using `gamepad.c`.
-- Read and display device data in binary format using `datareader.c`.
+- A gamepad with up to 3 joysticks and 16 buttons called `gamepad.c`.
+- A simple program that will read and display device data in binary format called `datareader.c`.
 
 The Expander provides a computationally efficient way to create inputs for a gamepad. The atmega8 constantly scans all 6 analog inputs and 16 digital inputs and handles debouncing. The Raspberry Pi can request all of the input data and create game inputs from the data 60 times a second with minimal CPU usage. There are many other uses for the device, but it was made with this use in mind.
 
@@ -79,10 +78,3 @@ sudo ./datareader [-d] [-a analog_channel]
 The `-d` option displays only the digital inputs. The `-a` option displays the specified analog channel. If no options are given, it displays all data.
 
 ## Troubleshooting
-
-## Acknowledgements
-This project uses the Linux uinput system to create a virtual gamepad, and the Linux I2C-dev system to read gamepad data from an I2C device.
-
-## Contact
-If you have any questions or feedback, please contact us at [Insert Contact Information Here].
-```
