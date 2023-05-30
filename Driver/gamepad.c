@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 // Constants for the device and joystick configuration
-#define I2C_DEVICE "/dev/i2c-0"
+#define I2C_BUS "/dev/i2c-0"
 #define I2C_ADDR 0x10
 #define GAMEPAD_UPDATE_INTERVAL_MS 16
 #define DEFAULT_JOYSTICKS 3
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     ioctl(uinput_fd, UI_DEV_CREATE);
 
     // Initialize I2C
-    int i2c_fd = open(I2C_DEVICE, O_RDWR);
+    int i2c_fd = open(I2C_BUS, O_RDWR);
     check(i2c_fd, "open i2c device");
     ioctl(i2c_fd, I2C_SLAVE, I2C_ADDR);
 
