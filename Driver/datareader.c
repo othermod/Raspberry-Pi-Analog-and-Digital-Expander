@@ -45,6 +45,10 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'a':
                     analog_opt = atoi(optarg);
+                    if (analog_opt < 1 || analog_opt > 6) {
+                        printf("Error: -a option must be between 1 and 6\n");
+                        exit(1);
+                    }
                     break;
                 default:
                     printf("Unknown option `-%c'.\n", c);
