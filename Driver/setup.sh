@@ -51,6 +51,13 @@ function enable_i2c() {
     else
         echo "dtparam=i2c_arm=on" >> /boot/config.txt
     fi
+    echo "Adding i2c_vc to config.txt"
+    grep 'dtparam=i2c_vc' /boot/config.txt >/dev/null
+    if [ $? -eq 0 ]; then
+      sudo sed -i '/dtparam=i2c_vc/c\dtparam=i2c_vc=on' /boot/config.txt
+    else
+      echo "dtparam=i2c_vc=on" >> /boot/config.txt
+    fi
 }
 
 function compile_and_run_i2c_scanner() {
