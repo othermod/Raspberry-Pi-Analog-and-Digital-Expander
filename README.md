@@ -34,7 +34,7 @@ If you intend to use this as a gamepad, you can run the setup script. [coming so
 
 ### Manual Installation
 
-### Enable I2C on the Camera Connector
+#### Enable I2C on the Camera Connector
 Start by enabling I2C on the system. Here are the steps if you haven't already done it:
 
 1. Open the Raspberry Pi configuration tool by running the following command in the terminal:
