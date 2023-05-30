@@ -9,11 +9,13 @@
 - [Troubleshooting](#troubleshooting)
 
 ## Overview
-This repository contains the PCB files for an atmega-based Analog and Digital I2C expander for the Raspberry Pi. The PCB connects to the Raspberry Pi using the CSI camera connector.
+This repository contains the PCB files and software for an atmega-based Analog and Digital I2C expander for the Raspberry Pi. The PCB connects to the Raspberry Pi using the CSI camera connector.
 
 I included two programs for interacting with the Expander:
 - Create a gamepad with up to 3 joysticks and 16 buttons using `gamepad.c`.
 - Read and display device data in binary format using `datareader.c`.
+
+The Expander provides a computationally efficient way to create inputs for a gamepad. The atmega8 constantly scans all 6 analog inputs and 16 digital inputs and handles debouncing. The Raspberry Pi can request all of the input data and create game inputs from the data 60 times a second with minimal CPU usage. There are many other uses for the device, but it was made with this use in mind.
 
 ## Prerequisites
 - A Raspberry Pi with an available CSI connector.
