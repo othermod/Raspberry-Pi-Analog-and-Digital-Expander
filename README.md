@@ -58,7 +58,7 @@ If you aren't sure which I2C bus the camera connector is using, run the followin
 gcc scan.c -o scan
 ./scan
 ```
-Now build the programs.
+Before building and running the programs, you need to verify that they have the correct I2C interface defined under `#define I2C_DEVICE`. It is `"/dev/i2c-0"` by default, and you may need to change it to match your situation. Once that is done, you can build the programs.
 ```
 gcc -O3 gamepad.c -o gamepad
 gcc datareader.c -o datareader
