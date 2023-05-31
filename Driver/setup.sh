@@ -119,10 +119,25 @@ function get_and_set_i2c_bus() {
 function install_service() {
     echo "Copying new driver and service files"
     cp -f gamepad /usr/bin/gamepad
+
+    # Ask the user for the number of joysticks
+    while true; do
+        read -p "Enter the number of joysticks to enable (0-3): " num_joysticks
+        if [[ "$num_joysticks" =~ ^[0-3]$ ]]; then
+            break
+        else
+            echo "Invalid input. Please enter a number between 0 and 3."
+        fi
+    done
+
+    # Modify the gamepad.service file
+    sed -i "s|ExecStart=sudo gamepad|ExecStart=sudo gamepad $num_joysticks|" gamepad.service
+
     cp -f gamepad.service /etc/systemd/system/gamepad.service
     echo "Enabling gamepad service"
     systemctl enable gamepad
 }
+
 
 function compile_drivers() {
     for file in gamepad datareader; do
@@ -132,6 +147,8 @@ function compile_drivers() {
         # Compile the C file
         gcc -O3 -o $file $file.c
         if [ $? -eq 0 ]; then
+            # copy to the /usr/bin folder
+            cp -f $file /usr/bin/$file
             echo "The $file was compiled successfully"
         else
             echo "Failed to compile the $file driver. Make sure you copied the correct $file.c file."
@@ -140,7 +157,6 @@ function compile_drivers() {
     done
 }
 
-
 function handle_existing_gamepad_service() {
     echo "Disabling and removing existing gamepad service"
     systemctl stop gamepad 2>/dev/null
@@ -148,7 +164,7 @@ function handle_existing_gamepad_service() {
 }
 
 function prompt_for_autostart() {
-    echo "Do you want the driver to load at startup?"
+    echo "Do you want the gamepad driver to load at startup?"
     PS3='Enter the number of your choice: '
     options=("Yes" "No")
     select yn in "${options[@]}"
@@ -156,6 +172,7 @@ function prompt_for_autostart() {
         case $yn in
             "Yes")
                 install_service
+                echo "A reboot is required"
                 break;;
             "No")
                 break;;
@@ -174,6 +191,3 @@ get_and_set_i2c_bus
 compile_drivers
 handle_existing_gamepad_service
 prompt_for_autostart
-
-echo "how many joysticks?"
-echo "a reboot may be required"
