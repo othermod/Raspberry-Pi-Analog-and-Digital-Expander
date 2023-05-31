@@ -131,8 +131,8 @@ function install_service() {
     done
 
     # Modify the gamepad.service file
-    sed -i "s|ExecStart=sudo gamepad|ExecStart=sudo gamepad $num_joysticks|" gamepad.service
-
+    # Replace the entire ExecStart line with the new one
+    sed -i "/ExecStart/c\ExecStart=sudo gamepad $num_joysticks" gamepad.service
     cp -f gamepad.service /etc/systemd/system/gamepad.service
     echo "Enabling gamepad service"
     systemctl enable gamepad
