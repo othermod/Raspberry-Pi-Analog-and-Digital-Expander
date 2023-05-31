@@ -117,9 +117,6 @@ function get_and_set_i2c_bus() {
 
 
 function install_service() {
-    echo "Copying new driver and service files"
-    cp -f gamepad /usr/bin/gamepad
-
     # Ask the user for the number of joysticks
     while true; do
         read -p "Enter the number of joysticks to enable (0-3): " num_joysticks
@@ -133,9 +130,14 @@ function install_service() {
     # Modify the gamepad.service file
     # Replace the entire ExecStart line with the new one
     sed -i "/ExecStart/c\ExecStart=sudo gamepad $num_joysticks" gamepad.service
+    remove_existing_gamepad_service
+    echo "Copying new driver and service files"
+    cp -f gamepad /usr/bin/gamepad
     cp -f gamepad.service /etc/systemd/system/gamepad.service
     echo "Enabling gamepad service"
-    systemctl enable gamepad
+    #having occasional issues with the enabling, and i have to run it again. try sudo? keep an eye on this
+    sudo systemctl enable gamepad
+    sudo systemctl start gamepad
 }
 
 
@@ -157,10 +159,11 @@ function compile_drivers() {
     done
 }
 
-function handle_existing_gamepad_service() {
-    echo "Disabling and removing existing gamepad service"
-    systemctl stop gamepad 2>/dev/null
-    systemctl disable gamepad 2>/dev/null
+function remove_existing_gamepad_service() {
+    echo "Disabling and removing existing gamepad service, if it exists"
+    sudo killall gamepad 2>/dev/null
+    sudo systemctl stop gamepad 2>/dev/null
+    sudo systemctl disable gamepad 2>/dev/null
 }
 
 function prompt_for_autostart() {
@@ -172,9 +175,11 @@ function prompt_for_autostart() {
         case $yn in
             "Yes")
                 install_service
-                echo "A reboot is required"
+                echo "The gamepad should now be running"
+                echo "If it is not functioning, then try a reboot"
                 break;;
             "No")
+                remove_existing_gamepad_service
                 break;;
             *)
                 echo "Invalid option. Please enter the number corresponding to 'Yes' or 'No'.";;
@@ -189,5 +194,4 @@ enable_i2c
 compile_and_run_i2c_scanner
 get_and_set_i2c_bus
 compile_drivers
-handle_existing_gamepad_service
 prompt_for_autostart
