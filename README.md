@@ -97,18 +97,18 @@ The `number_of_joysticks` argument is optional. If not provided, it defaults to 
 You can run `datareader` using the following command:
 
 ```bash
-sudo ./datareader [-d] [-a analog_channel]
+./datareader [-d] [-a analog_channel]
 ```
 
-The `-d`option displays only the digital inputs. The `-a` option displays the specified analog channel. If no options are given, it displays all data.
+The `-d` option displays only the digital inputs. The `-a` option displays the specified analog channel. If no options are given, it displays all 8 bytes of data.
 
 ## Troubleshooting
 
-If you encounter any issues while setting up or using the Raspberry Pi Analog and Digital Expander, here are some common troubleshooting steps:
+If you encounter any issues while setting up or using the Raspberry Pi Analog and Digital Expander, here are some troubleshooting steps:
 
 1. **Check the I2C Connection**: Ensure that the I2C connection is properly enabled and configured. You can use the `scan.c` program included in this repository to verify that the correct I2C bus is being used.
 
-2. **Check the CSI Cable**: Ensure that the CSI cable is properly connected and is compatible with your version of the Raspberry Pi.
+2. **Check the CSI Cable**: Ensure that the CSI cable is properly seated into the connectors at both ends.
 
 3. **Check the Compiler**: If you're having issues compiling `gamepad.c` or `datareader.c`, ensure that the GCC compiler is properly installed and updated.
 
